@@ -73,6 +73,17 @@ export default function setupRouter(i18n: VueI18nInstance) {
         },
       },
       {
+        path: "/monitoring",
+        component: () => import("./views/Monitoring.vue"),
+        props: (route) => {
+          const { date, dataType } = route.query;
+          return {
+            selectedDate: date,
+            selectedDataType: dataType || "sitepower",
+          };
+        },
+      }, 
+      {
         path: "/energy",
         component: () => import("./views/Energy.vue"),
         props: true,

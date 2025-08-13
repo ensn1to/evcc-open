@@ -24,6 +24,7 @@ import (
 	"github.com/evcc-io/evcc/core/prioritizer"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/core/sitepower"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/push"
@@ -101,6 +102,10 @@ type Site struct {
 	stats       *Stats                   // Stats
 	fcstEnergy  *meterEnergy
 	pvEnergy    map[string]*meterEnergy
+
+	// sitePower storage
+	sitePowerScheduler *sitepower.Scheduler // SitePower定时存储调度器
+	sitePowerAPI       *sitepower.API       // SitePower API实例
 
 	householdEnergy    *meterEnergy
 	householdSlotStart time.Time
@@ -240,7 +245,19 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		}
 		site.auxMeters = append(site.auxMeters, dev)
 	}
-
+	// 初始化sitePower存储
+	if db.Instance != nil {
+		// 直接使用evcc的数据库实例，自动创建sitepower表
+		sitePowerDB, err := sitepower.NewStore(db.Instance)
+		if err != nil {
+			site.log.ERROR.Printf("failed to initialize sitePower storage: %v", err)
+		} else {
+			// 创建1分钟间隔的调度器
+			site.sitePowerScheduler = sitepower.NewScheduler(sitePowerDB, 1*time.Minute)
+			site.sitePowerScheduler.Start()
+			site.log.INFO.Println("sitePower storage initialized with 15-minute interval")
+		}
+	}
 	// revert battery mode on shutdown
 	shutdown.Register(func() {
 		if mode := site.GetBatteryMode(); batteryModeModified(mode) {
@@ -248,9 +265,18 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 				site.log.ERROR.Println("battery mode:", err)
 			}
 		}
+		// 停止sitePower调度器
+		if site.sitePowerScheduler != nil {
+			site.sitePowerScheduler.Stop()
+		}
 	})
 
 	return nil
+}
+
+// GetSitePowerAPI 返回sitePower API实例
+func (site *Site) GetSitePowerAPI() *sitepower.API {
+	return site.sitePowerAPI
 }
 
 // NewSite creates a Site with sane defaults
@@ -961,6 +987,11 @@ func (site *Site) update(lp updater) {
 	site.updateBatteryMode(batteryGridChargeActive, rate)
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
+		// 更新sitePower到调度器（用于定时存储）
+		if site.sitePowerScheduler != nil {
+			site.sitePowerScheduler.UpdatePower(site.GetTitle(), sitePower/1000.0) // 转换为kW
+		}
+
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + max(0, site.pvPower) + site.batteryPower - totalChargePower
 		homePower = max(homePower, 0)
