@@ -127,6 +127,18 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
+	// register sitepower API routes
+	if coreSite, ok := site.(*core.Site); ok {
+		if sitePowerAPI := coreSite.GetSitePowerAPI(); sitePowerAPI != nil {
+			sitePowerAPI.RegisterRoutes(api)
+			fmt.Println("[DEBUG] sitePower API routes registered successfully")
+		} else {
+			fmt.Println("[DEBUG] sitePowerAPI is nil, routes not registered")
+		}
+	} else {
+		fmt.Println("[DEBUG] site type assertion failed")
+	}
+
 	// site api
 	smartCostLimit := func(lp loadpoint.API, limit *float64) {
 		lp.SetSmartCostLimit(limit)

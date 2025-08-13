@@ -22,9 +22,9 @@ func NewAPI(db *DB) *API {
 
 // RegisterRoutes 注册API路由
 func (api *API) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/api/sitepower/records", api.getRecords).Methods("GET")
-	router.HandleFunc("/api/sitepower/latest", api.getLatest).Methods("GET")
-	router.HandleFunc("/api/sitepower/cleanup", api.cleanup).Methods("POST")
+	router.HandleFunc("/sitepower/records", api.getRecords).Methods("GET")
+	router.HandleFunc("/sitepower/latest", api.getLatest).Methods("GET")
+	router.HandleFunc("/sitepower/cleanup", api.cleanup).Methods("POST")
 }
 
 // RecordsResponse API响应结构

@@ -255,7 +255,11 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			// 创建1分钟间隔的调度器
 			site.sitePowerScheduler = sitepower.NewScheduler(sitePowerDB, 1*time.Minute)
 			site.sitePowerScheduler.Start()
-			site.log.INFO.Println("sitePower storage initialized with 15-minute interval")
+			
+			// 初始化sitePower API
+			site.sitePowerAPI = sitepower.NewAPI(sitePowerDB)
+			
+			site.log.INFO.Println("sitePower storage and API initialized with 1-minute interval")
 		}
 	}
 	// revert battery mode on shutdown
