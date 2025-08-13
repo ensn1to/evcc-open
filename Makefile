@@ -33,11 +33,42 @@ default:: ui build
 
 all:: clean install install-ui ui assets lint test-ui lint-ui test build
 
-clean::
+help::
+	@echo "Available targets:"
+	@echo "  build              - Build evcc binary"
+	@echo "  eebus-cbsim        - Build EEBUS Control Box Simulator"
+	@echo "  eebus-cbsim-all    - Build EEBUS simulator for all platforms"
+	@echo "  clean-eebus-cbsim  - Clean EEBUS simulator binaries"
+	@echo "  soc                - Build SOC binary"
+	@echo "  test               - Run tests"
+	@echo "  clean              - Clean all build artifacts"
+
+clean:: clean-eebus-cbsim
 	rm -rf dist/
 
 install::
 	go install tool
+
+eebus-cbsim::
+	@echo Building EEBUS Control Box Simulator...
+	cd example/eebus-cbsim && CGO_ENABLED=0 go build -v -o controlbox main.go
+	@echo EEBUS Control Box Simulator built successfully: example/eebus-cbsim/controlbox
+
+# build eebus-cbsim for multiple platforms
+eebus-cbsim-all::
+	@echo Building EEBUS Control Box Simulator for multiple platforms...
+	cd example/eebus-cbsim && mkdir -p dist
+	cd example/eebus-cbsim && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o dist/controlbox-linux-amd64 main.go
+	cd example/eebus-cbsim && CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -v -o dist/controlbox-linux-arm64 main.go
+	cd example/eebus-cbsim && CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -v -o dist/controlbox-darwin-amd64 main.go
+	cd example/eebus-cbsim && CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -v -o dist/controlbox-darwin-arm64 main.go
+	cd example/eebus-cbsim && CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -v -o dist/controlbox-windows-amd64.exe main.go
+	@echo EEBUS Control Box Simulator built for all platforms in: example/eebus-cbsim/dist/
+
+# clean eebus-cbsim
+clean-eebus-cbsim::
+	rm -f example/eebus-cbsim/controlbox example/eebus-cbsim/main
+	rm -rf example/eebus-cbsim/dist/
 
 install-ui::
 	npm ci

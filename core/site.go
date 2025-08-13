@@ -44,7 +44,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
+	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, isBatteryBuffered, isBatteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
 }
 
 // measurement is used as slice element for publishing structured data
@@ -108,7 +108,7 @@ type Site struct {
 	// cached state
 	gridPower                float64         // Grid power
 	pvPower                  float64         // PV power
-	excessDCPower            float64         // PV excess DC charge power (hybrid only)
+	excessDCPower            float64         // PV excess DC charge power (hybrid only),存在是为了更准确地反映混合逆变器系统的实际发电能力。在某些情况下，光伏阵列产生的直流功率可能超过逆变器的最大交流输出能力，这部分多余的功率可以用于直流侧的电池充电或其他用途，而不会体现在交流侧的功率测量中
 	auxPower                 float64         // Aux power
 	batteryPower             float64         // Battery power (charge negative, discharge positive)
 	batterySoc               float64         // Battery soc
@@ -814,6 +814,8 @@ func (site *Site) updateHouseholdConsumption(totalChargePower float64) {
 //   - the net power exported by the site minus a residual margin
 //     (negative values mean grid: export, battery: charging
 //   - if battery buffer can be used for charging
+//
+// 主站功率计算（包含电池策略更新）
 func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, bool, bool, error) {
 	if err := site.updateMeters(); err != nil {
 		return 0, false, false, err
@@ -826,12 +828,14 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	}
 
 	// ensure safe default for residual power
+	// 处理残余功率（residualPower）：若电池存在且电量低于优先SOC，则设置一个最小残余功率以保证电池优先充电
 	residualPower := site.GetResidualPower()
 	if len(site.batteryMeters) > 0 && site.batterySoc < site.prioritySoc && residualPower <= 0 {
 		residualPower = 100 // Wsite.publish(keys.PvPower,
 	}
 
 	// allow using grid and charge as estimate for pv power
+	// 若未配置光伏电表，通过电网功率和充电功率反推光伏功率
 	if site.pvMeters == nil {
 		site.pvPower = totalChargePower - site.gridPower + residualPower
 		if site.pvPower < 0 {
@@ -842,12 +846,14 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	}
 
 	// honour battery priority
+	// 优先保障电池
 	batteryPower := site.batteryPower
 	excessDCPower := site.excessDCPower
 
 	// handed to loadpoint
-	var batteryBuffered, batteryStart bool
+	var isBatteryBuffered, isBatteryStart bool
 
+	// 更新电池策略
 	if len(site.batteryMeters) > 0 {
 		site.RLock()
 		defer site.RUnlock()
@@ -859,8 +865,8 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 			excessDCPower = 0
 		} else {
 			// if battery is above bufferSoc allow using it for charging
-			batteryBuffered = site.bufferSoc > 0 && site.batterySoc > site.bufferSoc
-			batteryStart = site.bufferStartSoc > 0 && site.batterySoc > site.bufferStartSoc
+			isBatteryBuffered = site.bufferSoc > 0 && site.batterySoc > site.bufferSoc
+			isBatteryStart = site.bufferStartSoc > 0 && site.batterySoc > site.bufferStartSoc
 		}
 	}
 
@@ -874,7 +880,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 
 	site.log.DEBUG.Printf("site power: %.0fW"+flexStr, sitePower)
 
-	return sitePower, batteryBuffered, batteryStart, nil
+	return sitePower, isBatteryBuffered, isBatteryStart, nil
 }
 
 // updateLoadpoints updates all loadpoints' charge power
@@ -903,6 +909,7 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 	return sum
 }
 
+// 获取到某个wallbox(loadpoint)信号后，根据当前site的数据更新调整当前wallbox的功率已经更新site
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
@@ -948,6 +955,7 @@ func (site *Site) update(lp updater) {
 		site.log.WARN.Println("planner:", msg)
 	}
 
+	// 根据当前电价和去电网功率设置更新电池模式
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
 	site.updateBatteryMode(batteryGridChargeActive, rate)
@@ -960,11 +968,15 @@ func (site *Site) update(lp updater) {
 
 		// add battery charging power to homePower to ignore all consumption which does not occur on loadpoints
 		// fix for: https://github.com/evcc-io/evcc/issues/11032
+		// 将电池充电功率算在家庭负载功率,nonChargePower为纯可用在充电的负载功率
 		nonChargePower := homePower + max(0, -site.batteryPower)
+		// 可用于家庭负载使用绿电
 		greenShareHome := site.greenShare(0, homePower)
+		// 可用于充电桩(loadpoint)绿电
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
 		// TODO
+		// 调整充电桩(loadpoint)充电策略
 		lp.Update(
 			sitePower, max(0, site.batteryPower), consumption, feedin, batteryBuffered, batteryStart,
 			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),

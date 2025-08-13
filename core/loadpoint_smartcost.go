@@ -8,6 +8,15 @@ import (
 
 // checkSmartLimit checks if current rate meets smart limit and returns next start time if not active.
 // checkBelow: true for rate <= limit, false for rate >= limit
+// smartCostActive 检查当前电价是否低于或等于智能成本限制
+//
+// 参数:
+//
+//	rates api.Rates - 电价数据，包含多个时间点的电价信息
+//
+// 返回值:
+//
+//	bool - 如果当前时间有电价且智能成本限制存在，并且当前电价小于等于限制，则返回true
 func (lp *Loadpoint) checkSmartLimit(limit *float64, rates api.Rates, checkBelow bool) (bool, time.Time) {
 	var nextStart time.Time
 

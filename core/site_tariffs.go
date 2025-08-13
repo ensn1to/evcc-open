@@ -31,6 +31,7 @@ type dailyDetails struct {
 //   - the current green share, calculated for the part of the consumption between powerFrom and powerTo
 //     the consumption below powerFrom will get the available green power first
 func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
+	// 计算当前站点可用绿电
 	greenPower := math.Max(0, site.pvPower) + math.Max(0, site.batteryPower)
 	greenPowerAvailable := math.Max(0, greenPower-powerFrom)
 
@@ -70,10 +71,17 @@ func (site *Site) effectiveCo2(greenShare float64) *float64 {
 	return nil
 }
 
+// publishTariffs 发布各种电价信息到站点
+// 参数:
+//
+//	greenShareHome: 家庭绿色能源占比
+//	greenShareLoadpoints: 充电点绿色能源占比
 func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
+	// 发布家庭和充电点的绿色能源占比
 	site.publish(keys.GreenShareHome, greenShareHome)
 	site.publish(keys.GreenShareLoadpoints, greenShareLoadpoints)
 
+	// 获取并发布当前各类电价
 	if v, err := tariff.Now(site.GetTariff(api.TariffUsageGrid)); err == nil {
 		site.publish(keys.TariffGrid, v)
 	}
@@ -89,6 +97,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	if v := site.effectivePrice(greenShareHome); v != nil {
 		site.publish(keys.TariffPriceHome, v)
 	}
+	// 计算并发布家庭的有效价格和CO2
 	if v := site.effectiveCo2(greenShareHome); v != nil {
 		site.publish(keys.TariffCo2Home, v)
 	}
@@ -98,7 +107,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	if v := site.effectiveCo2(greenShareLoadpoints); v != nil {
 		site.publish(keys.TariffCo2Loadpoints, v)
 	}
-
+	// 构建未来电价预测结构体
 	fc := struct {
 		Co2     api.Rates     `json:"co2,omitempty"`
 		FeedIn  api.Rates     `json:"feedin,omitempty"`
@@ -116,7 +125,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	if solar := tariff.Forecast(site.GetTariff(api.TariffUsageSolar)); len(solar) > 0 {
 		fc.Solar = lo.ToPtr(site.solarDetails(solar))
 	}
-
+	// 发布预测信息
 	site.publish(keys.Forecast, fc)
 }
 

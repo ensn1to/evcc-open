@@ -58,7 +58,7 @@ export default defineComponent({
 		};
 	},
 	head() {
-		return { title: "...", titleTemplate: "%s | evcc" };
+		return { title: "...", titleTemplate: "%s" };
 	},
 	computed: {
 		version() {

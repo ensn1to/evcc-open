@@ -74,6 +74,8 @@ type Task = func()
 
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
+// The Loadpoint controls an individual charging station.
+// It communicates with the charger to enable/disable charging and set current limits, and it monitors the vehicle to track charging progress
 type Loadpoint struct {
 	clock    clock.Clock // mockable time
 	bus      evbus.Bus   // event bus
@@ -1801,8 +1803,9 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, isBatteryBuffered, isBatteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
+	// 判断当前是否是低价时段，以及下个低电价时段
 	smartCostActive, smartCostNextStart := lp.checkSmartLimit(lp.GetSmartCostLimit(), consumption, true)
 	lp.publish(keys.SmartCostActive, smartCostActive)
 	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
@@ -1815,9 +1818,11 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	lp.processTasks()
 
 	// read and publish meters first- charge power and currents have already been updated by the site
+	// 更新站点ev的相关电压，电流信息
 	lp.updateChargeVoltages()
 	lp.phasesFromChargeCurrents()
 
+	// 更新绿色比例、电价、碳排放因子
 	lp.energyMetrics.SetEnvironment(greenShare, effPrice, effCo2)
 
 	// update ChargeRater here to make sure initial meter update is caught
@@ -1850,6 +1855,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	}
 
 	// identify connected vehicle
+	// 如果车辆未被识别且充电桩不集成设备，则尝试通过VIN或状态识别车辆
 	if lp.connected() && !lp.chargerHasFeature(api.IntegratedDevice) {
 		// read identity and run associated action
 		lp.identifyVehicle()
@@ -1945,7 +1951,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			break
 		}
 
-		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart)
+		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBoostPower, isBatteryBuffered, isBatteryStart)
 
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			targetCurrent = lp.effectiveMinCurrent()
