@@ -6,48 +6,56 @@
 					<div class="text-truncate">Home Battery</div>
 				</h3>
 			</div>
+			<button 
+				type="button" 
+				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 evcc-gray d-none d-sm-block ms-2" 
+				@click="openBatterySettingsModal"
+				title="Battery Settings"
+			>
+				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
+			</button>
 		</div>
 
-		<div class="details d-flex align-items-start mb-2">
-			<div>
-				<div class="d-flex align-items-center">
-					<div class="root mb-2 text-nowrap text-truncate-xs-only">
-						<div class="mb-2 label text-truncate-xs-only text-start">电池功率</div>
-						<h3 class="value m-0 justify-content-start">
-							<span>{{ formattedPower }}</span>
-						</h3>
-					</div>
-					<shopicon-regular-battery
-						class="text-evcc opacity-transiton"
-						:class="batteryIconClass"
-						size="m"
-						data-shopicon="true"
-					>
-						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-							<path d="M0 0h48v48H0z" fill="none"></path>
-							<path d="M32 6H16c-2.2 0-4 1.8-4 4v28c0 2.2 1.8 4 4 4h16c2.2 0 4-1.8 4-4V10c0-2.2-1.8-4-4-4zm0 32H16V10h16v28zM20 2h8v4h-8z"></path>
-							<rect v-if="batterySoc > 0" :x="18" :y="38 - (batterySoc * 0.24)" :width="12" :height="batterySoc * 0.24" fill="currentColor"></rect>
-						</svg>
-					</shopicon-regular-battery>
-				</div>
+		<div class="details d-flex flex-wrap justify-content-between">
+			<div class="root flex-grow-1" data-testid="battery-power">
+				<div class="mb-2 label text-truncate-xs-only text-start">功率</div>
+				<h3 class="value m-0 justify-content-start">
+					<span>{{ formattedPower }}</span>
+					<div class="extraValue text-nowrap">&nbsp;</div>
+				</h3>
+			</div>
+
+			<div class="text-center flex-grow-1">
+				<div class="mb-2 label text-truncate-xs-only text-center">状态</div>
+				<div class="value m-0 d-block align-items-baseline justify-content-center" style="font-size: 0.875rem;">
+				{{ batteryStatusText }}
+			</div>
+			</div>
+
+			<div class="root flex-grow-1 text-end" data-testid="battery-soc">
+				<div class="mb-2 label text-truncate-xs-only text-end">Capacity</div>
+				<h3 class="value m-0 justify-content-end">
+					<span class="text-gray fw-normal" data-testid="battery-soc-value">
+						<span style="font-size: 0.875rem;">{{ batteryCapacityText }}</span>
+					</span>
+				</h3>
 			</div>
 		</div>
 
 		<hr class="divider">
 
-		<div class="battery-info pt-4 flex-grow-1 d-flex flex-column justify-content-end">
+		<div class="battery-info pt-2 flex-grow-1 d-flex flex-column justify-content-end">
 			<div class="d-flex justify-content-between mb-3 align-items-center" data-testid="battery-status">
 				<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
+					<div class="battery-status evcc-gray" data-testid="battery-status-text">SOC</div>
 				</h4>
 			</div>
 
 			<div class="battery-soc mt-1 mb-4">
 				<div class="d-flex align-items-center gap-2 mb-2">
-					<div class="battery-status evcc-gray" data-testid="battery-status-text">SOC</div>
 					<div class="progress flex-grow-1">
 						<div 
 							class="progress-bar bg-success"
-							:class="{ 'progress-bar-striped progress-bar-animated': isCharging }"
 							role="progressbar" 
 							:style="`width: ${batterySoc}%; transition: width var(--evcc-transition-fast) linear;`"
 						>
@@ -57,38 +65,16 @@
 				</div>
 			</div>
 
-			<div class="details d-flex flex-wrap justify-content-between">
-				<div class="root flex-grow-1" data-testid="battery-power">
-					<div class="mb-2 label text-truncate-xs-only text-start">功率</div>
-					<h3 class="value m-0 justify-content-start">
-						<span>{{ formattedPower }}</span>
-						<div class="extraValue text-nowrap">&nbsp;</div>
-					</h3>
-				</div>
 
-				<div class="text-center flex-grow-1">
-					<div class="mb-2 label text-truncate-xs-only text-center">状态</div>
-					<div class="value m-0 d-block align-items-baseline justify-content-center text-decoration-underline">
-						{{ batteryStatusText }}
-					</div>
-				</div>
-
-				<div class="root flex-grow-1 text-end" data-testid="battery-soc">
-					<div class="mb-2 label text-truncate-xs-only text-end">SOC</div>
-					<h3 class="value m-0 justify-content-end">
-						<span class="text-decoration-underline text-gray fw-normal" data-testid="battery-soc-value">
-							<span>{{ formattedSoc }}</span>
-						</span>
-					</h3>
-				</div>
-			</div>
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import formatter from "@/mixins/formatter";
+import '@h2d2/shopicons/es/regular/adjust';
+import { defineComponent } from 'vue';
+import formatter from '@/mixins/formatter';
+import { Modal } from 'bootstrap';
 
 export default defineComponent({
 	name: 'BatteryCard',
@@ -97,7 +83,8 @@ export default defineComponent({
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		batteryMode: { type: String, default: '' },
-		batteryConfigured: { type: Boolean, default: false }
+		batteryConfigured: { type: Boolean, default: false },
+		batteryCapacity: { type: Number, default: 13.4 }
 	},
 	computed: {
 		formattedPower() {
@@ -108,14 +95,14 @@ export default defineComponent({
 		},
 		batteryStatusText() {
 			if (!(this as any).batteryConfigured) {
-				return 'Battery not configured';
+				return 'not configured';
 			}
 			if ((this as any).batteryPower > 0) {
-				return 'Battery discharging';
+				return 'discharging';
 			} else if ((this as any).batteryPower < 0) {
-				return 'Battery charging';
+				return 'charging';
 			} else {
-				return 'Battery idle';
+				return 'idle';
 			}
 		},
 		isCharging() {
@@ -129,6 +116,19 @@ export default defineComponent({
 			} else {
 				return 'opacity-100';
 			}
+		},
+		batteryCapacityText() {
+			const currentEnergy = ((this as any).batteryCapacity / 100) * (this as any).batterySoc;
+			const totalEnergy = (this as any).batteryCapacity;
+			return `${currentEnergy.toFixed(1)} kWh of ${totalEnergy.toFixed(1)} kWh`;
+		}
+	},
+	methods: {
+		openBatterySettingsModal() {
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById('batterySettingsModal') as HTMLElement
+			);
+			modal.show();
 		}
 	}
 });
@@ -161,17 +161,22 @@ export default defineComponent({
 .divider {
 	border: none;
 	border-top: 1px solid var(--evcc-box);
-	margin: 1rem 0;
+	margin: 0.5rem 0;
 }
 
 .battery-soc .progress {
-	height: 1rem;
+	height: 1.5rem;
 	border-radius: 0.25rem;
 	background-color: var(--evcc-box);
 }
 
 .battery-soc .progress-bar {
 	border-radius: 0.25rem;
+}
+
+.battery-status {
+	font-weight: normal;
+	font-size: 0.875rem;
 }
 
 .icon {
