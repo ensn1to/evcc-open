@@ -20,6 +20,14 @@
 				</div>
 			</div>
 			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" />
+			<BatteryCard
+				v-if="batteryConfigured"
+				class="mt-3"
+				:batteryPower="batteryPower"
+				:batterySoc="batterySoc"
+				:batteryMode="batteryMode"
+				:batteryConfigured="batteryConfigured"
+			/>
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
 			<div
@@ -79,6 +87,7 @@ import Notifications from "../Top/Notifications.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
 import Footer from "../Footer/Footer.vue";
+import BatteryCard from "../Battery/BatteryCard.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
@@ -105,6 +114,7 @@ export default defineComponent({
 		Notifications,
 		TopNavigation: Navigation,
 		WelcomeIcons,
+		BatteryCard,
 	},
 	mixins: [formatter, collector],
 	props: {
