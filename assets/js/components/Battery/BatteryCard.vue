@@ -3,10 +3,11 @@
 		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
 			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
 				<h3 class="me-2 mb-0 text-truncate d-flex">
-					<div class="text-truncate">Home Battery</div>
+					<div class="text-truncate">Battery</div>
 				</h3>
 			</div>
 			<button 
+				v-if="batteryConfigured"
 				type="button" 
 				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 evcc-gray d-none d-sm-block ms-2" 
 				@click="openBatterySettingsModal"

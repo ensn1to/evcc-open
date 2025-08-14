@@ -127,20 +127,26 @@
 </template>
 
 <script lang="ts">
-import Modal from "bootstrap/js/dist/modal";
-import Dropdown from "bootstrap/js/dist/dropdown";
-import "@h2d2/shopicons/es/regular/gift";
-import "@h2d2/shopicons/es/regular/moonstars";
-import "@h2d2/shopicons/es/regular/menu";
-import "@h2d2/shopicons/es/regular/newtab";
-import collector from "@/mixins/collector";
-import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
-import baseAPI from "./baseapi";
-import { isApp, sendToApp } from "@/utils/native";
-import { isUserConfigError } from "@/utils/fatal";
-import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, AuthProviders } from "@/types/evcc";
-import type { Provider as Provider } from "./types";
+import Modal from 'bootstrap/js/dist/modal';
+import Dropdown from 'bootstrap/js/dist/dropdown';
+import '@h2d2/shopicons/es/regular/gift';
+import '@h2d2/shopicons/es/regular/moonstars';
+import '@h2d2/shopicons/es/regular/menu';
+import '@h2d2/shopicons/es/regular/newtab';
+import collector from '@/mixins/collector';
+import { logout, isLoggedIn, openLoginModal } from '../Auth/auth';
+import baseAPI from './baseapi';
+import { isApp, sendToApp } from '@/utils/native';
+import { isUserConfigError } from '@/utils/fatal';
+import { defineComponent, type PropType } from 'vue';
+import type { FatalError, Sponsor, AuthProviders, Battery, Forecast } from '@/types/evcc';
+
+interface Provider {
+	title: string;
+	authenticated: boolean;
+	loginPath: string;
+	logoutPath: string;
+}
 
 export default defineComponent({
 	name: "TopNavigation",
@@ -148,8 +154,8 @@ export default defineComponent({
 	props: {
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
-		forecast: Object,
-		battery: Array,
+		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
+		battery: { type: Array as PropType<Battery[]>, default: () => [] },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
 	data() {
@@ -159,55 +165,63 @@ export default defineComponent({
 		};
 	},
 	computed: {
-		batteryConfigured() {
-			return this.battery?.length;
+		batteryConfigured(): boolean {
+			return this.battery?.length > 0 || false;
 		},
 		providerLogins(): Provider[] {
-			return Object.entries(this.authProviders).map(([title, { authenticated, id }]) => ({
+			return Object.entries(this.authProviders || {}).map(([title, { authenticated, id }]) => ({
 				title,
 				authenticated,
 				loginPath: "providerauth/login?id=" + id,
 				logoutPath: "providerauth/logout?id=" + id,
 			}));
 		},
-		loginRequired() {
-			return Object.values(this.authProviders).some((p) => !p.authenticated);
+		loginRequired(): boolean {
+			return Object.values(this.authProviders || {}).some((p) => !p.authenticated);
 		},
-		showConfigBadge() {
-			const userConfigError = isUserConfigError(this.fatal);
-			return this.sponsor.expiresSoon || userConfigError;
+		showConfigBadge(): boolean {
+			const userConfigError = isUserConfigError(this.fatal || []);
+			return this.sponsor?.expiresSoon || userConfigError;
 		},
-		showRootBadge() {
+		showRootBadge(): boolean {
 			return this.loginRequired || this.showConfigBadge;
 		},
-		badgeClass() {
-			if (this.fatal.length > 0) {
+		badgeClass(): string {
+			if ((this.fatal || []).length > 0) {
 				return "bg-danger";
 			}
 			return "bg-warning";
 		},
-		batteryModalAvailable() {
+		batteryModalAvailable(): boolean {
 			return this.batteryConfigured;
 		},
-		forecastAvailable() {
+		forecastAvailable(): boolean {
 			const { grid, solar, co2 } = this.forecast || {};
-			return grid || solar || co2;
+			return !!(grid || solar || co2);
 		},
-		showLogout() {
+		showLogout(): boolean {
 			return isLoggedIn();
 		},
 	},
 	mounted() {
-		const $el = document.getElementById("topNavigatonDropdown");
-		if (!$el) {
-			return;
-		}
-		this.dropdown = new Dropdown(
-			document.getElementById("topNavigatonDropdown") as HTMLElement
-		);
+		this.$nextTick(() => {
+			const element = document.getElementById('topNavigatonDropdown');
+			if (element) {
+				this.dropdown = new Dropdown(element);
+				// 添加点击事件监听器作为备用方案
+				element.addEventListener('click', (e) => {
+					e.preventDefault();
+					if (this.dropdown) {
+						this.dropdown.toggle();
+					}
+				});
+			}
+		});
 	},
 	unmounted() {
-		this.dropdown?.dispose();
+		if (this.dropdown) {
+			this.dropdown.dispose();
+		}
 	},
 	methods: {
 		async handleProviderAuthorization(provider: Provider) {
@@ -221,7 +235,7 @@ export default defineComponent({
 					alert(`Failed to login: ${error.response?.data}`);
 				}
 			} else {
-				if (window.confirm(this.$t("header.authProviders.confirmLogout", { title }))) {
+				if (window.confirm((this as any).$t("header.authProviders.confirmLogout", { title }))) {
 					try {
 						await baseAPI.get(logoutPath);
 					} catch (error: any) {
@@ -263,7 +277,7 @@ export default defineComponent({
 		},
 		async logout() {
 			await logout();
-			this.$router.push({ path: "/" });
+			(this as any).$router.push({ path: "/" });
 		},
 	},
 });
