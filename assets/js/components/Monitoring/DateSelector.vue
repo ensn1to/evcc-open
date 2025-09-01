@@ -12,10 +12,7 @@
 			:selected="selectedDate"
 			@change="emitDate($event.target.value)"
 		>
-			<button
-				class="btn btn-sm border-0 h-100 date-button"
-				data-testid="navigate-date"
-			>
+			<button class="btn btn-sm border-0 h-100 date-button" data-testid="navigate-date">
 				{{ formattedDate }}
 			</button>
 		</CustomSelect>
@@ -66,18 +63,18 @@ export default {
 		dateOptions() {
 			const options = [];
 			const today = new Date();
-			
+
 			// Generate last 30 days
 			for (let i = 0; i < 30; i++) {
 				const date = new Date(today);
 				date.setDate(today.getDate() - i);
-				const dateStr = date.toISOString().split('T')[0];
+				const dateStr = date.toISOString().split("T")[0];
 				options.push({
 					value: dateStr,
 					name: date.toLocaleDateString(),
 				});
 			}
-			
+
 			return options;
 		},
 	},
@@ -86,13 +83,13 @@ export default {
 			if (!this.hasPrevDay) return;
 			const prevDate = new Date(this.currentDate);
 			prevDate.setDate(prevDate.getDate() - 1);
-			this.$emit("update-date", prevDate.toISOString().split('T')[0]);
+			this.$emit("update-date", prevDate.toISOString().split("T")[0]);
 		},
 		emitNextDay() {
 			if (!this.hasNextDay) return;
 			const nextDate = new Date(this.currentDate);
 			nextDate.setDate(nextDate.getDate() + 1);
-			this.$emit("update-date", nextDate.toISOString().split('T')[0]);
+			this.$emit("update-date", nextDate.toISOString().split("T")[0]);
 		},
 		emitDate(dateStr) {
 			this.$emit("update-date", dateStr);

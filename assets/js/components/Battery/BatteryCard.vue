@@ -1,17 +1,20 @@
 <template>
-	<div class="battery-card d-flex flex-column pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0 h-100" data-testid="battery-card">
+	<div
+		class="battery-card d-flex flex-column pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0 h-100"
+		data-testid="battery-card"
+	>
 		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
 			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
 				<h3 class="me-2 mb-0 text-truncate d-flex">
 					<div class="text-truncate">Battery</div>
 				</h3>
 			</div>
-			<button 
+			<button
 				v-if="batteryConfigured"
-				type="button" 
-				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 evcc-gray d-none d-sm-block ms-2" 
-				@click="openBatterySettingsModal"
+				type="button"
+				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 evcc-gray d-none d-sm-block ms-2"
 				title="Battery Settings"
+				@click="openBatterySettingsModal"
 			>
 				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
 			</button>
@@ -28,36 +31,44 @@
 
 			<div class="text-center flex-grow-1">
 				<div class="mb-2 label text-truncate-xs-only text-center">Status</div>
-				<div class="value m-0 d-block align-items-baseline justify-content-center" style="font-size: 0.875rem;">
-				{{ batteryStatusText }}
-			</div>
+				<div
+					class="value m-0 d-block align-items-baseline justify-content-center"
+					style="font-size: 0.875rem"
+				>
+					{{ batteryStatusText }}
+				</div>
 			</div>
 
 			<div class="root flex-grow-1 text-end" data-testid="battery-soc">
 				<div class="mb-2 label text-truncate-xs-only text-end">Capacity</div>
 				<h3 class="value m-0 justify-content-end">
 					<span class="text-gray fw-normal" data-testid="battery-soc-value">
-						<span style="font-size: 0.875rem;">{{ batteryCapacityText }}</span>
+						<span style="font-size: 0.875rem">{{ batteryCapacityText }}</span>
 					</span>
 				</h3>
 			</div>
 		</div>
 
-		<hr class="divider">
+		<hr class="divider" />
 
 		<div class="battery-info pt-2 flex-grow-1 d-flex flex-column justify-content-end">
-			<div class="d-flex justify-content-between mb-3 align-items-center" data-testid="battery-status">
+			<div
+				class="d-flex justify-content-between mb-3 align-items-center"
+				data-testid="battery-status"
+			>
 				<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
-					<div class="battery-status evcc-gray" data-testid="battery-status-text">SOC</div>
+					<div class="battery-status evcc-gray" data-testid="battery-status-text">
+						SOC
+					</div>
 				</h4>
 			</div>
 
 			<div class="battery-soc mt-1 mb-4">
 				<div class="d-flex align-items-center gap-2 mb-2">
 					<div class="progress flex-grow-1">
-						<div 
+						<div
 							class="progress-bar bg-success"
-							role="progressbar" 
+							role="progressbar"
 							:style="`width: ${batterySoc}%; transition: width var(--evcc-transition-fast) linear;`"
 						>
 							{{ formattedSoc }}
@@ -65,27 +76,25 @@
 					</div>
 				</div>
 			</div>
-
-
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
-import '@h2d2/shopicons/es/regular/adjust';
-import { defineComponent } from 'vue';
-import formatter from '@/mixins/formatter';
-import { Modal } from 'bootstrap';
+import "@h2d2/shopicons/es/regular/adjust";
+import { defineComponent } from "vue";
+import formatter from "@/mixins/formatter";
+import { Modal } from "bootstrap";
 
 export default defineComponent({
-	name: 'BatteryCard',
+	name: "BatteryCard",
 	mixins: [formatter],
 	props: {
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
-		batteryMode: { type: String, default: '' },
+		batteryMode: { type: String, default: "" },
 		batteryConfigured: { type: Boolean, default: false },
-		batteryCapacity: { type: Number, default: 13.4 }
+		batteryCapacity: { type: Number, default: 13.4 },
 	},
 	computed: {
 		formattedPower() {
@@ -96,14 +105,14 @@ export default defineComponent({
 		},
 		batteryStatusText() {
 			if (!(this as any).batteryConfigured) {
-				return 'not configured';
+				return "not configured";
 			}
 			if ((this as any).batteryPower > 0) {
-				return 'discharging';
+				return "discharging";
 			} else if ((this as any).batteryPower < 0) {
-				return 'charging';
+				return "charging";
 			} else {
-				return 'idle';
+				return "idle";
 			}
 		},
 		isCharging() {
@@ -111,27 +120,27 @@ export default defineComponent({
 		},
 		batteryIconClass() {
 			if ((this as any).isCharging) {
-				return 'opacity-100 text-success';
+				return "opacity-100 text-success";
 			} else if ((this as any).batteryPower > 0) {
-				return 'opacity-100 text-warning';
+				return "opacity-100 text-warning";
 			} else {
-				return 'opacity-100';
+				return "opacity-100";
 			}
 		},
 		batteryCapacityText() {
 			const currentEnergy = ((this as any).batteryCapacity / 100) * (this as any).batterySoc;
 			const totalEnergy = (this as any).batteryCapacity;
 			return `${currentEnergy.toFixed(1)} kWh of ${totalEnergy.toFixed(1)} kWh`;
-		}
+		},
 	},
 	methods: {
 		openBatterySettingsModal() {
 			const modal = Modal.getOrCreateInstance(
-				document.getElementById('batterySettingsModal') as HTMLElement
+				document.getElementById("batterySettingsModal") as HTMLElement
 			);
 			modal.show();
-		}
-	}
+		},
+	},
 });
 </script>
 

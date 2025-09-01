@@ -78,6 +78,11 @@
 					{{ $t("log.title") }}
 				</router-link>
 			</li>
+			<li v-if="optimizeAvailable">
+				<router-link class="dropdown-item" to="/optimize" active-class="active">
+					Optimize 🧪
+				</router-link>
+			</li>
 			<li><hr class="dropdown-divider" /></li>
 			<template v-if="providerLogins.length > 0">
 				<li>
@@ -127,19 +132,19 @@
 </template>
 
 <script lang="ts">
-import Modal from 'bootstrap/js/dist/modal';
-import Dropdown from 'bootstrap/js/dist/dropdown';
-import '@h2d2/shopicons/es/regular/gift';
-import '@h2d2/shopicons/es/regular/moonstars';
-import '@h2d2/shopicons/es/regular/menu';
-import '@h2d2/shopicons/es/regular/newtab';
-import collector from '@/mixins/collector';
-import { logout, isLoggedIn, openLoginModal } from '../Auth/auth';
-import baseAPI from './baseapi';
-import { isApp, sendToApp } from '@/utils/native';
-import { isUserConfigError } from '@/utils/fatal';
-import { defineComponent, type PropType } from 'vue';
-import type { FatalError, Sponsor, AuthProviders, Battery, Forecast } from '@/types/evcc';
+import Modal from "bootstrap/js/dist/modal";
+import Dropdown from "bootstrap/js/dist/dropdown";
+import "@h2d2/shopicons/es/regular/gift";
+import "@h2d2/shopicons/es/regular/moonstars";
+import "@h2d2/shopicons/es/regular/menu";
+import "@h2d2/shopicons/es/regular/newtab";
+import collector from "@/mixins/collector";
+import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
+import baseAPI from "./baseapi";
+import { isApp, sendToApp } from "@/utils/native";
+import { isUserConfigError } from "@/utils/fatal";
+import { defineComponent, type PropType } from "vue";
+import type { FatalError, Sponsor, AuthProviders, Battery, Forecast, EvOpt } from "@/types/evcc";
 
 interface Provider {
 	title: string;
@@ -156,6 +161,7 @@ export default defineComponent({
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
 		battery: { type: Array as PropType<Battery[]>, default: () => [] },
+		evopt: { type: Object as PropType<EvOpt>, required: false },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
 	data() {
@@ -169,12 +175,14 @@ export default defineComponent({
 			return this.battery?.length > 0 || false;
 		},
 		providerLogins(): Provider[] {
-			return Object.entries(this.authProviders || {}).map(([title, { authenticated, id }]) => ({
-				title,
-				authenticated,
-				loginPath: "providerauth/login?id=" + id,
-				logoutPath: "providerauth/logout?id=" + id,
-			}));
+			return Object.entries(this.authProviders || {}).map(
+				([title, { authenticated, id }]) => ({
+					title,
+					authenticated,
+					loginPath: "providerauth/login?id=" + id,
+					logoutPath: "providerauth/logout?id=" + id,
+				})
+			);
 		},
 		loginRequired(): boolean {
 			return Object.values(this.authProviders || {}).some((p) => !p.authenticated);
@@ -199,17 +207,20 @@ export default defineComponent({
 			const { grid, solar, co2 } = this.forecast || {};
 			return !!(grid || solar || co2);
 		},
+		optimizeAvailable() {
+			return !!this.evopt && this.$hiddenFeatures();
+		},
 		showLogout(): boolean {
 			return isLoggedIn();
 		},
 	},
 	mounted() {
 		this.$nextTick(() => {
-			const element = document.getElementById('topNavigatonDropdown');
+			const element = document.getElementById("topNavigatonDropdown");
 			if (element) {
 				this.dropdown = new Dropdown(element);
 				// 添加点击事件监听器作为备用方案
-				element.addEventListener('click', (e) => {
+				element.addEventListener("click", (e) => {
 					e.preventDefault();
 					if (this.dropdown) {
 						this.dropdown.toggle();
@@ -235,7 +246,11 @@ export default defineComponent({
 					alert(`Failed to login: ${error.response?.data}`);
 				}
 			} else {
-				if (window.confirm((this as any).$t("header.authProviders.confirmLogout", { title }))) {
+				if (
+					window.confirm(
+						(this as any).$t("header.authProviders.confirmLogout", { title })
+					)
+				) {
 					try {
 						await baseAPI.get(logoutPath);
 					} catch (error: any) {

@@ -14,7 +14,7 @@ ifconfig | grep -E "(inet |inet6 )" | head -5
 echo ""
 echo "3. mDNS相关信息："
 echo "   检查.local域名解析："
-nslookup MacBook-Pro-2.local 2>/dev/null || echo "   无法解析MacBook-Pro-2.local"
+nslookup MacBook-Pro-2.local 2> /dev/null || echo "   无法解析MacBook-Pro-2.local"
 
 echo ""
 echo "4. 启动EEBUS服务并监控mDNS广播："
@@ -28,21 +28,21 @@ sleep 3
 echo ""
 echo "5. 检查mDNS服务广播："
 # 使用dns-sd命令查看mDNS广播（如果可用）
-if command -v dns-sd >/dev/null 2>&1; then
-    echo "   查看_ship._tcp服务广播（5秒）："
-    timeout 5 dns-sd -B _ship._tcp local. 2>/dev/null || echo "   无法查看mDNS广播"
+if command -v dns-sd > /dev/null 2>&1; then
+	echo "   查看_ship._tcp服务广播（5秒）："
+	timeout 5 dns-sd -B _ship._tcp local. 2> /dev/null || echo "   无法查看mDNS广播"
 else
-    echo "   dns-sd命令不可用"
+	echo "   dns-sd命令不可用"
 fi
 
 echo ""
 echo "6. 检查服务监听端口："
-lsof -i :8184 2>/dev/null || echo "   端口8184未被监听"
+lsof -i :8184 2> /dev/null || echo "   端口8184未被监听"
 
 echo ""
 echo "7. 停止测试服务："
-kill $CONTROLBOX_PID 2>/dev/null
-wait $CONTROLBOX_PID 2>/dev/null
+kill $CONTROLBOX_PID 2> /dev/null
+wait $CONTROLBOX_PID 2> /dev/null
 
 echo ""
 echo "=== 诊断完成 ==="

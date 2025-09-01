@@ -13,50 +13,50 @@ TARGET_SKI="6b395afa4bee11215df0dfa96d5dc759f9b80ee5"
 echo "🔍 1. DNS解析检查"
 echo "检查 $TARGET_HOST 的DNS解析..."
 if nslookup $TARGET_HOST > /dev/null 2>&1; then
-    echo "✅ DNS解析成功"
-    nslookup $TARGET_HOST
+	echo "✅ DNS解析成功"
+	nslookup $TARGET_HOST
 else
-    echo "❌ DNS解析失败"
-    echo "尝试使用IP地址: $TARGET_IP"
+	echo "❌ DNS解析失败"
+	echo "尝试使用IP地址: $TARGET_IP"
 fi
 echo
 
 echo "🌐 2. 网络连通性检查"
 echo "Ping测试 $TARGET_HOST..."
 if ping -c 3 $TARGET_HOST > /dev/null 2>&1; then
-    echo "✅ Ping成功"
+	echo "✅ Ping成功"
 else
-    echo "❌ Ping失败，尝试IP地址"
-    if ping -c 3 $TARGET_IP > /dev/null 2>&1; then
-        echo "✅ IP Ping成功"
-    else
-        echo "❌ IP Ping也失败"
-    fi
+	echo "❌ Ping失败，尝试IP地址"
+	if ping -c 3 $TARGET_IP > /dev/null 2>&1; then
+		echo "✅ IP Ping成功"
+	else
+		echo "❌ IP Ping也失败"
+	fi
 fi
 echo
 
 echo "🔌 3. 端口连接检查"
 echo "检查端口 $TARGET_PORT 是否开放..."
-if nc -z $TARGET_IP $TARGET_PORT 2>/dev/null; then
-    echo "✅ 端口 $TARGET_PORT 开放"
+if nc -z $TARGET_IP $TARGET_PORT 2> /dev/null; then
+	echo "✅ 端口 $TARGET_PORT 开放"
 else
-    echo "❌ 端口 $TARGET_PORT 无法连接"
+	echo "❌ 端口 $TARGET_PORT 无法连接"
 fi
 echo
 
 echo "🔐 4. TLS连接检查"
 echo "检查TLS握手..."
-timeout 5 openssl s_client -connect $TARGET_IP:$TARGET_PORT -verify_return_error 2>/dev/null | head -20
+timeout 5 openssl s_client -connect $TARGET_IP:$TARGET_PORT -verify_return_error 2> /dev/null | head -20
 echo
 
 echo "📡 5. mDNS服务发现"
 echo "搜索EEBUS服务..."
-if command -v avahi-browse >/dev/null 2>&1; then
-    timeout 10 avahi-browse -t _ship._tcp
-elif command -v dns-sd >/dev/null 2>&1; then
-    timeout 10 dns-sd -B _ship._tcp
+if command -v avahi-browse > /dev/null 2>&1; then
+	timeout 10 avahi-browse -t _ship._tcp
+elif command -v dns-sd > /dev/null 2>&1; then
+	timeout 10 dns-sd -B _ship._tcp
 else
-    echo "⚠️ 未找到mDNS工具 (avahi-browse 或 dns-sd)"
+	echo "⚠️ 未找到mDNS工具 (avahi-browse 或 dns-sd)"
 fi
 echo
 

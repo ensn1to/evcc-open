@@ -5,7 +5,9 @@
 			<main class="col-12">
 				<div class="header-outer sticky-top">
 					<div class="container px-4">
-						<div class="row py-3 py-sm-3 d-flex flex-column flex-sm-row gap-3 gap-lg-0 mb-lg-2">
+						<div
+							class="row py-3 py-sm-3 d-flex flex-column flex-sm-row gap-3 gap-lg-0 mb-lg-2"
+						>
 							<div class="col-lg-5 d-flex mb-lg-0">
 								<SelectGroup
 									id="monitoringType"
@@ -28,7 +30,9 @@
 					</div>
 				</div>
 
-				<h3 class="fw-normal my-0 d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden">
+				<h3
+					class="fw-normal my-0 d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden"
+				>
 					<span class="d-block no-wrap text-truncate">
 						{{ historyTitle }}
 					</span>
@@ -52,7 +56,10 @@
 							<i class="fas fa-chart-line fa-3x mb-3 text-muted"></i>
 							<h5>No Data Available</h5>
 							<p>No power data found for {{ selectedDate }}.</p>
-							<p class="small">Try selecting a different date or check if the system is collecting data.</p>
+							<p class="small">
+								Try selecting a different date or check if the system is collecting
+								data.
+							</p>
 						</div>
 						<PowerChart
 							v-else
@@ -65,29 +72,43 @@
 						<!-- Statistics Section -->
 						<div class="row align-items-start mb-5">
 							<div class="col-12">
-								<h3 class="fw-normal my-4">{{ $t('monitoring.statistics') }}</h3>
+								<h3 class="fw-normal my-4">{{ $t("monitoring.statistics") }}</h3>
 								<div class="row text-center">
 									<div class="col-md-3 mb-3">
 										<div class="stat-item">
-											<div class="stat-label">{{ $t('monitoring.stats.max').toUpperCase() }}</div>
-											<div class="stat-value">{{ formatPower(maxPower) }}</div>
+											<div class="stat-label">
+												{{ $t("monitoring.stats.max").toUpperCase() }}
+											</div>
+											<div class="stat-value">
+												{{ formatPower(maxPower) }}
+											</div>
 										</div>
 									</div>
 									<div class="col-md-3 mb-3">
 										<div class="stat-item">
-											<div class="stat-label">{{ $t('monitoring.stats.min').toUpperCase() }}</div>
-											<div class="stat-value">{{ formatPower(minPower) }}</div>
+											<div class="stat-label">
+												{{ $t("monitoring.stats.min").toUpperCase() }}
+											</div>
+											<div class="stat-value">
+												{{ formatPower(minPower) }}
+											</div>
 										</div>
 									</div>
 									<div class="col-md-3 mb-3">
 										<div class="stat-item">
-											<div class="stat-label">{{ $t('monitoring.stats.avg').toUpperCase() }}</div>
-											<div class="stat-value">{{ formatPower(averagePower) }}</div>
+											<div class="stat-label">
+												{{ $t("monitoring.stats.avg").toUpperCase() }}
+											</div>
+											<div class="stat-value">
+												{{ formatPower(averagePower) }}
+											</div>
 										</div>
 									</div>
 									<div class="col-md-3 mb-3">
 										<div class="stat-item">
-											<div class="stat-label">{{ $t('monitoring.stats.total').toUpperCase() }}</div>
+											<div class="stat-label">
+												{{ $t("monitoring.stats.total").toUpperCase() }}
+											</div>
 											<div class="stat-value">{{ sitePowerData.length }}</div>
 										</div>
 									</div>
@@ -106,7 +127,11 @@
 
 				<!-- Export Button -->
 				<div class="d-flex gap-2 mt-1 mb-5">
-					<button class="btn btn-outline-secondary" @click="exportData" :disabled="!sitePowerData.length">
+					<button
+						class="btn btn-outline-secondary"
+						:disabled="!sitePowerData.length"
+						@click="exportData"
+					>
 						Export CSV
 					</button>
 				</div>
@@ -121,10 +146,10 @@ import DateSelector from "../components/Monitoring/DateSelector.vue";
 import PowerChart from "../components/Monitoring/PowerChart.vue";
 import SelectGroup from "../components/Helper/SelectGroup.vue";
 import api from "../api";
-import { defineComponent } from 'vue';
+import { defineComponent } from "vue";
 
 export default defineComponent({
-	name: 'Monitoring',
+	name: "Monitoring",
 	components: {
 		TopHeader: Header,
 		DateSelector,
@@ -133,8 +158,8 @@ export default defineComponent({
 	},
 	data() {
 		return {
-			activeTab: 'sitepower',
-			selectedDate: new Date().toISOString().split('T')[0], // 移到data中作为内部状态
+			activeTab: "sitepower",
+			selectedDate: new Date().toISOString().split("T")[0], // 移到data中作为内部状态
 			sitePowerData: [],
 			lastUpdate: new Date(),
 			loading: {
@@ -145,67 +170,89 @@ export default defineComponent({
 			},
 		};
 	},
+	head() {
+		return {
+			title: this.$t("monitoring.title"),
+			titleTemplate: "%s",
+		};
+	},
 	computed: {
 		typeOptions() {
 			return [
-				{ name: this.$t('monitoring.dataType.sitepower'), value: 'sitepower' },
-				{ name: this.$t('monitoring.dataType.battery'), value: 'battery' }
+				{ name: this.$t("monitoring.dataType.sitepower"), value: "sitepower" },
+				{ name: this.$t("monitoring.dataType.battery"), value: "battery" },
 			];
 		},
 		historyTitle() {
-			return this.activeTab === 'sitepower'
-				? this.$t('monitoring.chartTitle.sitepower')
-				: this.$t('monitoring.chartTitle.battery');
+			return this.activeTab === "sitepower"
+				? this.$t("monitoring.chartTitle.sitepower")
+				: this.$t("monitoring.chartTitle.battery");
 		},
 		historySubTitle() {
 			const date = new Date(this.selectedDate);
-			const formattedDate = date.toLocaleDateString('en-US', {
-				year: 'numeric',
-				month: '2-digit',
-				day: '2-digit'
+			const formattedDate = date.toLocaleDateString("en-US", {
+				year: "numeric",
+				month: "2-digit",
+				day: "2-digit",
 			});
-			if (this.activeTab === 'sitepower' && this.sitePowerData.length > 0) {
+			if (this.activeTab === "sitepower" && this.sitePowerData.length > 0) {
 				return `${formattedDate} • ${this.sitePowerData.length} data points • ⌀ ${this.formatPower(this.averagePower)}`;
 			}
 			return formattedDate;
 		},
 		formattedSelectedDate() {
 			const date = new Date(this.selectedDate);
-			return date.toLocaleDateString('en-US', {
-				year: 'numeric',
-				month: '2-digit',
-				day: '2-digit'
+			return date.toLocaleDateString("en-US", {
+				year: "numeric",
+				month: "2-digit",
+				day: "2-digit",
 			});
 		},
 		chartData() {
 			if (!this.sitePowerData || this.sitePowerData.length === 0) {
 				return [];
 			}
-			return this.sitePowerData.map(record => ({
+			return this.sitePowerData.map((record) => ({
 				time: record.createdAt,
-				power: record.powerKW || 0
+				power: record.powerKW || 0,
 			}));
 		},
 		maxPower() {
 			if (!this.sitePowerData || this.sitePowerData.length === 0) return null;
-			return Math.max(...this.sitePowerData.map(record => record.powerKW));
+			return Math.max(...this.sitePowerData.map((record) => record.powerKW));
 		},
 		minPower() {
 			if (!this.sitePowerData || this.sitePowerData.length === 0) return null;
-			return Math.min(...this.sitePowerData.map(record => record.powerKW));
+			return Math.min(...this.sitePowerData.map((record) => record.powerKW));
 		},
 		averagePower() {
 			if (!this.sitePowerData || this.sitePowerData.length === 0) return null;
-			const total = this.sitePowerData.reduce((sum, record) => sum + (record.powerKW || 0), 0);
+			const total = this.sitePowerData.reduce(
+				(sum, record) => sum + (record.powerKW || 0),
+				0
+			);
 			return total / this.sitePowerData.length;
 		},
 		isRefreshing() {
 			return this.loading.sitepower;
 		},
 	},
+	watch: {
+		selectedDate: {
+			handler(newDate, oldDate) {
+				if (newDate !== oldDate) {
+					this.loadSitePowerData();
+				}
+			},
+			immediate: false, // 不立即执行，避免与mounted重复
+		},
+	},
+	mounted() {
+		this.loadSitePowerData();
+	},
 	methods: {
 		formatPower(power) {
-			if (power === null || power === undefined) return 'N/A';
+			if (power === null || power === undefined) return "N/A";
 			return `${power.toFixed(2)} kW`;
 		},
 		setActiveTab(tab) {
@@ -221,7 +268,7 @@ export default defineComponent({
 
 			try {
 				const params = {
-					site: 'Zuhause' // Use the site name from the API response
+					site: "Zuhause", // Use the site name from the API response
 				};
 
 				// Set time range for the selected date
@@ -233,27 +280,28 @@ export default defineComponent({
 					to.setHours(23, 59, 59, 999);
 
 					// Convert to ISO string format as expected by the API
-					params['from'] = from.toISOString();
-					params['to'] = to.toISOString();
+					params["from"] = from.toISOString();
+					params["to"] = to.toISOString();
 				}
 
 				// 添加超时和缓存控制
-				const response = await api.get('/sitepower/records', {
+				const response = await api.get("/sitepower/records", {
 					params,
 					timeout: 10000, // 10秒超时
 					headers: {
-						'Cache-Control': 'max-age=60' // 缓存1分钟
-					}
+						"Cache-Control": "max-age=60", // 缓存1分钟
+					},
 				});
 				this.sitePowerData = response.data.records || [];
 				this.lastUpdate = new Date();
 			} catch (err) {
-				if (err.code === 'ECONNABORTED') {
-					this.error.sitepower = 'Request timeout. Please check your connection and try again.';
+				if (err.code === "ECONNABORTED") {
+					this.error.sitepower =
+						"Request timeout. Please check your connection and try again.";
 				} else {
-					this.error.sitepower = err.message || 'Failed to load site power data';
+					this.error.sitepower = err.message || "Failed to load site power data";
 				}
-				console.error('Error loading site power data:', err);
+				console.error("Error loading site power data:", err);
 			} finally {
 				this.loading.sitepower = false;
 			}
@@ -265,41 +313,24 @@ export default defineComponent({
 			if (!this.sitePowerData.length) return;
 
 			const csvContent = [
-				['Timestamp', 'Site Title', 'Power (kW)'],
-				...this.sitePowerData.map(record => [
+				["Timestamp", "Site Title", "Power (kW)"],
+				...this.sitePowerData.map((record) => [
 					record.createdAt,
 					record.siteTitle,
-					record.powerKW
-				])
-			].map(row => row.join(',')).join('\n');
+					record.powerKW,
+				]),
+			]
+				.map((row) => row.join(","))
+				.join("\n");
 
-			const blob = new Blob([csvContent], { type: 'text/csv' });
+			const blob = new Blob([csvContent], { type: "text/csv" });
 			const url = window.URL.createObjectURL(blob);
-			const link = document.createElement('a');
+			const link = document.createElement("a");
 			link.href = url;
 			link.download = `site-power-${this.selectedDate}.csv`;
 			link.click();
 			window.URL.revokeObjectURL(url);
 		},
-	},
-	watch: {
-		selectedDate: {
-			handler(newDate, oldDate) {
-				if (newDate !== oldDate) {
-					this.loadSitePowerData();
-				}
-			},
-			immediate: false // 不立即执行，避免与mounted重复
-		}
-	},
-	head() {
-		return {
-			title: this.$t('monitoring.title'),
-			titleTemplate: '%s'
-		};
-	},
-	mounted() {
-		this.loadSitePowerData();
 	},
 });
 </script>

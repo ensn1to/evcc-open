@@ -13,19 +13,19 @@ CONTROLBOX_PID=$!
 sleep 2
 
 # Check if the process is running
-if kill -0 $CONTROLBOX_PID 2>/dev/null; then
-    echo "✓ Controlbox started successfully (PID: $CONTROLBOX_PID)"
+if kill -0 $CONTROLBOX_PID 2> /dev/null; then
+	echo "✓ Controlbox started successfully (PID: $CONTROLBOX_PID)"
 else
-    echo "✗ Failed to start controlbox"
-    exit 1
+	echo "✗ Failed to start controlbox"
+	exit 1
 fi
 
 # Test HTTP server is responding
 echo "Testing HTTP server..."
 if curl -s http://localhost:7071 > /dev/null; then
-    echo "✓ HTTP server is responding"
+	echo "✓ HTTP server is responding"
 else
-    echo "✗ HTTP server is not responding"
+	echo "✗ HTTP server is not responding"
 fi
 
 # Send SIGINT to test graceful shutdown
@@ -36,12 +36,12 @@ kill -INT $CONTROLBOX_PID
 sleep 3
 
 # Check if process terminated
-if kill -0 $CONTROLBOX_PID 2>/dev/null; then
-    echo "✗ Process did not terminate gracefully, forcing kill..."
-    kill -KILL $CONTROLBOX_PID
-    exit 1
+if kill -0 $CONTROLBOX_PID 2> /dev/null; then
+	echo "✗ Process did not terminate gracefully, forcing kill..."
+	kill -KILL $CONTROLBOX_PID
+	exit 1
 else
-    echo "✓ Process terminated gracefully"
+	echo "✓ Process terminated gracefully"
 fi
 
 echo "✓ Graceful shutdown test passed!"

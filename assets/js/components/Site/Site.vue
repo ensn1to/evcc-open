@@ -102,6 +102,7 @@ import type {
 	SMART_COST_TYPE,
 	Sponsor,
 	FatalError,
+	EvOpt,
 } from "@/types/evcc";
 import type { Grid } from "./types";
 
@@ -166,6 +167,7 @@ export default defineComponent({
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
 		telemetry: Boolean,
+		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
 		batteryConfigured() {

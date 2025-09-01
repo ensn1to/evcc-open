@@ -82,10 +82,15 @@ export default function setupRouter(i18n: VueI18nInstance) {
             selectedDataType: dataType || "sitepower",
           };
         },
-      }, 
+      },
       {
         path: "/energy",
         component: () => import("./views/Energy.vue"),
+        props: true,
+      },
+      {
+        path: "/optimize",
+        component: () => import("./views/Optimize.vue"),
         props: true,
       },
       {

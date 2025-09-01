@@ -633,30 +633,6 @@
     "needHelp": "Need Help?",
     "sessions": "Charging Sessions"
   },
-  "monitoring": {
-    "title": "Monitoring",
-    "dataType": {
-      "sitepower": "Site Power",
-      "battery": "Battery Charging"
-    },
-    "chartTitle": {
-      "sitepower": "Site Power Data",
-      "battery": "Battery Charging Data"
-    },
-    "loading": "Loading...",
-    "noData": "No data available for the selected date.",
-    "statistics": "Statistics",
-    "stats": {
-      "max": "Maximum",
-      "min": "Minimum",
-      "avg": "Average",
-      "total": "Data Points"
-    },
-    "table": {
-      "time": "Time",
-      "power": "Power"
-    }
-  },
   "help": {
     "discussionsButton": "GitHub discussions",
     "documentationButton": "Documentation",
@@ -907,6 +883,30 @@
     },
     "vehicles": "Parking",
     "welcome": "Hello aboard!"
+  },
+  "monitoring": {
+    "chartTitle": {
+      "battery": "Battery Charging Data",
+      "sitepower": "Site Power Data"
+    },
+    "dataType": {
+      "battery": "Battery Charging",
+      "sitepower": "Site Power"
+    },
+    "loading": "Loading...",
+    "noData": "No data available for the selected date.",
+    "statistics": "Statistics",
+    "stats": {
+      "avg": "Average",
+      "max": "Maximum",
+      "min": "Minimum",
+      "total": "Data Points"
+    },
+    "table": {
+      "power": "Power",
+      "time": "Time"
+    },
+    "title": "Monitoring"
   },
   "notifications": {
     "dismissAll": "Dismiss all",

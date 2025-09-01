@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import { Chart, registerables } from 'chart.js';
+import { Chart, registerables } from "chart.js";
 
 Chart.register(...registerables);
 
@@ -37,42 +37,59 @@ export default {
 			if (!this.data || this.data.length === 0) {
 				return {
 					labels: [],
-					datasets: [{
-						label: this.dataType === 'sitepower' ? 'Site Power (kW)' : 'Battery Power (kW)',
-						data: [],
-						borderColor: this.dataType === 'sitepower' ? '#007bff' : '#28a745',
-						backgroundColor: this.dataType === 'sitepower' ? 'rgba(0, 123, 255, 0.1)' : 'rgba(40, 167, 69, 0.1)',
-						borderWidth: 2,
-						fill: true,
-						tension: 0.4,
-						pointRadius: 3,
-						pointHoverRadius: 5,
-						pointBackgroundColor: this.dataType === 'sitepower' ? '#007bff' : '#28a745',
-						pointBorderColor: '#fff',
-						pointBorderWidth: 2,
-					}],
+					datasets: [
+						{
+							label:
+								this.dataType === "sitepower"
+									? "Site Power (kW)"
+									: "Battery Power (kW)",
+							data: [],
+							borderColor: this.dataType === "sitepower" ? "#007bff" : "#28a745",
+							backgroundColor:
+								this.dataType === "sitepower"
+									? "rgba(0, 123, 255, 0.1)"
+									: "rgba(40, 167, 69, 0.1)",
+							borderWidth: 2,
+							fill: true,
+							tension: 0.4,
+							pointRadius: 3,
+							pointHoverRadius: 5,
+							pointBackgroundColor:
+								this.dataType === "sitepower" ? "#007bff" : "#28a745",
+							pointBorderColor: "#fff",
+							pointBorderWidth: 2,
+						},
+					],
 				};
 			}
 
 			return {
-				labels: this.data.map(point => {
+				labels: this.data.map((point) => {
 					const date = new Date(point.time);
-					return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+					return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 				}),
-				datasets: [{
-					label: this.dataType === 'sitepower' ? 'Site Power (kW)' : 'Battery Power (kW)',
-					data: this.data.map(point => point.power || 0),
-					borderColor: this.dataType === 'sitepower' ? '#007bff' : '#28a745',
-					backgroundColor: this.dataType === 'sitepower' ? 'rgba(0, 123, 255, 0.1)' : 'rgba(40, 167, 69, 0.1)',
-					borderWidth: 2,
-					fill: false, // 禁用填充避免filler插件错误
-					tension: 0.4,
-					pointRadius: 3,
-					pointHoverRadius: 5,
-					pointBackgroundColor: this.dataType === 'sitepower' ? '#007bff' : '#28a745',
-					pointBorderColor: '#fff',
-					pointBorderWidth: 2,
-				}],
+				datasets: [
+					{
+						label:
+							this.dataType === "sitepower"
+								? "Site Power (kW)"
+								: "Battery Power (kW)",
+						data: this.data.map((point) => point.power || 0),
+						borderColor: this.dataType === "sitepower" ? "#007bff" : "#28a745",
+						backgroundColor:
+							this.dataType === "sitepower"
+								? "rgba(0, 123, 255, 0.1)"
+								: "rgba(40, 167, 69, 0.1)",
+						borderWidth: 2,
+						fill: false, // 禁用填充避免filler插件错误
+						tension: 0.4,
+						pointRadius: 3,
+						pointHoverRadius: 5,
+						pointBackgroundColor: this.dataType === "sitepower" ? "#007bff" : "#28a745",
+						pointBorderColor: "#fff",
+						pointBorderWidth: 2,
+					},
+				],
 			};
 		},
 		chartOptions() {
@@ -84,45 +101,45 @@ export default {
 					x: {
 						title: {
 							display: true,
-							text: 'Time',
-							color: '#666',
+							text: "Time",
+							color: "#666",
 							font: {
 								size: 12,
-								weight: 'normal'
-							}
+								weight: "normal",
+							},
 						},
 						grid: {
 							display: true,
-							color: 'rgba(0, 0, 0, 0.1)',
+							color: "rgba(0, 0, 0, 0.1)",
 							drawBorder: false,
 						},
 						ticks: {
-							color: '#666',
+							color: "#666",
 							font: {
-								size: 11
-							}
-						}
+								size: 11,
+							},
+						},
 					},
 					y: {
 						title: {
 							display: true,
-							text: 'Power (kW)',
-							color: '#666',
+							text: "Power (kW)",
+							color: "#666",
 							font: {
 								size: 12,
-								weight: 'normal'
-							}
+								weight: "normal",
+							},
 						},
 						grid: {
 							display: true,
-							color: 'rgba(0, 0, 0, 0.1)',
+							color: "rgba(0, 0, 0, 0.1)",
 							drawBorder: false,
 						},
 						ticks: {
-							color: '#666',
+							color: "#666",
 							font: {
-								size: 11
-							}
+								size: 11,
+							},
 						},
 						beginAtZero: false,
 					},
@@ -130,23 +147,23 @@ export default {
 				plugins: {
 					legend: {
 						display: true,
-						position: 'top',
-						align: 'start',
+						position: "top",
+						align: "start",
 						labels: {
 							usePointStyle: true,
 							padding: 20,
 							font: {
-								size: 12
-							}
-						}
+								size: 12,
+							},
+						},
 					},
 					tooltip: {
-						mode: 'index',
+						mode: "index",
 						intersect: false,
-						backgroundColor: 'rgba(0, 0, 0, 0.8)',
-						titleColor: '#fff',
-						bodyColor: '#fff',
-						borderColor: 'rgba(0, 0, 0, 0.1)',
+						backgroundColor: "rgba(0, 0, 0, 0.8)",
+						titleColor: "#fff",
+						bodyColor: "#fff",
+						borderColor: "rgba(0, 0, 0, 0.1)",
 						borderWidth: 1,
 						callbacks: {
 							label: (context) => {
@@ -156,28 +173,17 @@ export default {
 					},
 				},
 				interaction: {
-					mode: 'nearest',
-					axis: 'x',
+					mode: "nearest",
+					axis: "x",
 					intersect: false,
 				},
 				elements: {
 					line: {
-						tension: 0.4
-					}
-				}
+						tension: 0.4,
+					},
+				},
 			};
 		},
-	},
-	mounted() {
-		this.initChart();
-		this.handleResize();
-		window.addEventListener('resize', this.handleResize);
-	},
-	beforeUnmount() {
-		if (this.chart) {
-			this.chart.destroy();
-		}
-		window.removeEventListener('resize', this.handleResize);
 	},
 	watch: {
 		data: {
@@ -190,29 +196,40 @@ export default {
 			this.updateChart();
 		},
 	},
+	mounted() {
+		this.initChart();
+		this.handleResize();
+		window.addEventListener("resize", this.handleResize);
+	},
+	beforeUnmount() {
+		if (this.chart) {
+			this.chart.destroy();
+		}
+		window.removeEventListener("resize", this.handleResize);
+	},
 	methods: {
 		initChart() {
 			try {
-				const ctx = this.$refs.chartCanvas.getContext('2d');
+				const ctx = this.$refs.chartCanvas.getContext("2d");
 				if (this.chart) {
 					this.chart.destroy();
 				}
 				this.chart = new Chart(ctx, {
-					type: 'line',
+					type: "line",
 					data: this.chartData,
 					options: this.chartOptions,
 				});
 			} catch (error) {
-				console.error('Error initializing chart:', error);
+				console.error("Error initializing chart:", error);
 			}
 		},
 		updateChart() {
 			if (this.chart) {
 				try {
 					this.chart.data = this.chartData;
-					this.chart.update('none'); // Use 'none' animation mode for better performance
+					this.chart.update("none"); // Use 'none' animation mode for better performance
 				} catch (error) {
-					console.error('Error updating chart:', error);
+					console.error("Error updating chart:", error);
 					// Reinitialize chart if update fails
 					this.chart.destroy();
 					this.initChart();
