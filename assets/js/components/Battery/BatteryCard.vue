@@ -19,7 +19,7 @@
 
 		<div class="details d-flex flex-wrap justify-content-between">
 			<div class="root flex-grow-1" data-testid="battery-power">
-				<div class="mb-2 label text-truncate-xs-only text-start">功率</div>
+				<div class="mb-2 label text-truncate-xs-only text-start">Power</div>
 				<h3 class="value m-0 justify-content-start">
 					<span>{{ formattedPower }}</span>
 					<div class="extraValue text-nowrap">&nbsp;</div>
@@ -27,7 +27,7 @@
 			</div>
 
 			<div class="text-center flex-grow-1">
-				<div class="mb-2 label text-truncate-xs-only text-center">状态</div>
+				<div class="mb-2 label text-truncate-xs-only text-center">Status</div>
 				<div class="value m-0 d-block align-items-baseline justify-content-center" style="font-size: 0.875rem;">
 				{{ batteryStatusText }}
 			</div>
