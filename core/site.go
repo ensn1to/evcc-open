@@ -1040,8 +1040,6 @@ func (site *Site) update(lp updater) {
 		site.log.ERROR.Println(err)
 	}
 
-	site.updateHouseholdConsumption(totalChargePower)
-
 	site.stats.Update(site)
 }
 

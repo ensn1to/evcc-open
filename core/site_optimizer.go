@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	evopt "github.com/andig/evopt/client"
@@ -52,10 +51,12 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 }
 
 func (site *Site) optimizerUpdate(battery []measurement) error {
-	uri := os.Getenv("EVOPT_URI")
-	if uri == "" {
-		return nil
-	}
+	// uri := os.Getenv("EVOPT_URI")
+	// if uri == "" {
+	// 	return nil
+	// }
+
+	uri := "http://localhost:7050"
 
 	if time.Since(updated) < time.Minute {
 		return nil
@@ -98,8 +99,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	}
 
 	req := evopt.OptimizationInput{
-		EtaC: &eta,
-		EtaD: &eta,
+		EtaC: eta,
+		EtaD: eta,
 		TimeSeries: evopt.TimeSeries{
 			Dt: dt,
 			Gt: asFloat32(gt),
@@ -115,17 +116,16 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 	for _, lp := range site.Loadpoints() {
 		bat := evopt.BatteryConfig{
-			ChargeFromGrid: lo.ToPtr(true),
-
-			CMin: float32(lp.EffectiveMinPower()),
-			CMax: float32(lp.EffectiveMaxPower()),
-			DMax: 0,
-			SMin: 0,
-			PA:   pa,
+			ChargeFromGrid: true,
+			CMin:           float32(lp.EffectiveMinPower()),
+			CMax:           float32(lp.EffectiveMaxPower()),
+			DMax:           0,
+			SMin:           0,
+			PA:             pa,
 		}
 
 		if profile := loadpointProfile(lp, firstSlotDuration, minLen); profile != nil {
-			bat.PDemand = lo.ToPtr(asFloat32(profile))
+			bat.PDemand = asFloat32(profile)
 		}
 
 		detail := batteryDetail{Type: batteryTypeLoadpoint}
@@ -170,7 +170,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 
 		// TODO atm we cannot cannot control charge from grid speed
 		if _, ok := (dev.Instance()).(api.BatteryController); ok {
-			bat.ChargeFromGrid = lo.ToPtr(true)
+			bat.ChargeFromGrid = true
 		}
 
 		req.Batteries = append(req.Batteries, bat)
@@ -202,12 +202,12 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return err
 	}
 
-	if resp.StatusCode() == http.StatusInternalServerError && resp.JSON500.Message != nil {
-		return errors.New(*resp.JSON500.Message)
+	if resp.StatusCode() == http.StatusInternalServerError && resp.JSON500.Message != "" {
+		return errors.New(resp.JSON500.Message)
 	}
 
-	if resp.StatusCode() == http.StatusBadRequest && resp.JSON400.Message != nil {
-		return errors.New(*resp.JSON400.Message)
+	if resp.StatusCode() == http.StatusBadRequest && resp.JSON400.Message != "" {
+		return errors.New(resp.JSON400.Message)
 	}
 
 	if resp.StatusCode() != http.StatusOK {
