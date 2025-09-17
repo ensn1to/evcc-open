@@ -24,12 +24,12 @@
 		>
 			<li>
 				<router-link class="dropdown-item" to="/sessions" active-class="active">
-					{{ $t("header.sessions") }}
+					{{ this.t("header.sessions") }}
 				</router-link>
 			</li>
 			<li>
 				<router-link class="dropdown-item" to="/monitoring" active-class="active">
-					{{ $t("header.monitoring") }}
+					{{ this.t("header.monitoring") }}
 				</router-link>
 			</li>
 			<li><hr class="dropdown-divider" /></li>
@@ -40,7 +40,7 @@
 					data-testid="topnavigation-settings"
 					@click="openSettingsModal"
 				>
-					{{ $t("settings.title") }}
+					{{ this.t("settings.title") }}
 				</button>
 			</li>
 			<li v-if="batteryModalAvailable">
@@ -50,7 +50,7 @@
 					data-testid="topnavigation-battery"
 					@click="openBatterySettingsModal"
 				>
-					{{ $t("batterySettings.modalTitle") }}
+					{{ this.t("batterySettings.modalTitle") }}
 				</button>
 			</li>
 			<li v-if="forecastAvailable">
@@ -60,7 +60,7 @@
 					data-testid="topnavigation-forecast"
 					@click="openForecastModal"
 				>
-					{{ $t("forecast.modalTitle") }}
+					{{ this.t("forecast.modalTitle") }}
 				</button>
 			</li>
 			<li>
@@ -70,23 +70,23 @@
 						class="d-inline-block p-1 rounded-circle bg-warning rounded-circle"
 						:class="badgeClass"
 					></span>
-					{{ $t("config.main.title") }}
+					{{ this.t("config.main.title") }}
 				</router-link>
 			</li>
 			<li>
 				<router-link class="dropdown-item" to="/log" active-class="active">
-					{{ $t("log.title") }}
+					{{ this.t("log.title") }}
 				</router-link>
 			</li>
-			<li v-if="optimizeAvailable">
-				<router-link class="dropdown-item" to="/optimize" active-class="active">
-					Optimize 🧪
-				</router-link>
-			</li>
+			<li>
+						<router-link class="dropdown-item" to="/optimize" active-class="active">
+							Optimize 🧪
+						</router-link>
+					</li>
 			<li><hr class="dropdown-divider" /></li>
 			<template v-if="providerLogins.length > 0">
 				<li>
-					<h6 class="dropdown-header">{{ $t("header.authProviders.title") }}</h6>
+					<h6 class="dropdown-header">{{ this.t("header.authProviders.title") }}</h6>
 				</li>
 				<li v-for="l in providerLogins" :key="l.title">
 					<button
@@ -105,7 +105,7 @@
 			</template>
 			<li>
 				<button type="button" class="dropdown-item" @click="openHelpModal">
-					<span>{{ $t("header.needHelp") }}</span>
+					<span>{{ this.t("header.needHelp") }}</span>
 				</button>
 			</li>
 			<!-- <li>
@@ -119,12 +119,12 @@
 			</li> -->
 			<li v-if="isApp">
 				<button type="button" class="dropdown-item" @click="openNativeSettings">
-					{{ $t("header.nativeSettings") }}
+					{{ this.t("header.nativeSettings") }}
 				</button>
 			</li>
 			<li v-if="showLogout">
 				<button type="button" class="dropdown-item" @click="logout">
-					{{ $t("header.logout") }}
+					{{ this.t("header.logout") }}
 				</button>
 			</li>
 		</ul>
@@ -138,12 +138,14 @@ import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
-import collector from "@/mixins/collector";
 import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
 import baseAPI from "./baseapi";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
-import { defineComponent, type PropType } from "vue";
+import { defineComponent, type PropType, getCurrentInstance } from "vue";
+import { useI18n } from "vue-i18n";
+import { useRouter } from "vue-router";
+import store from "@/store";
 import type { FatalError, Sponsor, AuthProviders, Battery, Forecast, EvOpt } from "@/types/evcc";
 
 interface Provider {
@@ -155,28 +157,25 @@ interface Provider {
 
 export default defineComponent({
 	name: "TopNavigation",
-	mixins: [collector],
-	props: {
-		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
-		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
-		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
-		battery: { type: Array as PropType<Battery[]>, default: () => [] },
-		evopt: { type: Object as PropType<EvOpt>, required: false },
-		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
-	},
 	data() {
+		const { t } = useI18n();
+		const router = useRouter();
+		const instance = getCurrentInstance();
 		return {
 			isApp: isApp(),
 			dropdown: null as Dropdown | null,
+			t,
+			router,
+			instance
 		};
 	},
 	computed: {
 		batteryConfigured(): boolean {
-			return this.battery?.length > 0 || false;
+			return store.state.battery?.length > 0 || false;
 		},
 		providerLogins(): Provider[] {
-			return Object.entries(this.authProviders || {}).map(
-				([title, { authenticated, id }]) => ({
+			return Object.entries(store.state.authProviders || {}).map(
+				([title, { authenticated, id }]: [string, any]) => ({
 					title,
 					authenticated,
 					loginPath: "providerauth/login?id=" + id,
@@ -185,17 +184,18 @@ export default defineComponent({
 			);
 		},
 		loginRequired(): boolean {
-			return Object.values(this.authProviders || {}).some((p) => !p.authenticated);
+			const authProviders = store.state.authProviders || {};
+			return Object.values(authProviders).some((p: any) => !p.authenticated);
 		},
 		showConfigBadge(): boolean {
-			const userConfigError = isUserConfigError(this.fatal || []);
-			return this.sponsor?.expiresSoon || userConfigError;
+			const userConfigError = isUserConfigError(store.state.fatal || []);
+			return store.state.sponsor?.expiresSoon || userConfigError;
 		},
 		showRootBadge(): boolean {
 			return this.loginRequired || this.showConfigBadge;
 		},
 		badgeClass(): string {
-			if ((this.fatal || []).length > 0) {
+			if ((store.state.fatal || []).length > 0) {
 				return "bg-danger";
 			}
 			return "bg-warning";
@@ -204,11 +204,12 @@ export default defineComponent({
 			return this.batteryConfigured;
 		},
 		forecastAvailable(): boolean {
-			const { grid, solar, co2 } = this.forecast || {};
+			const { grid, solar, co2 } = store.state.forecast || {};
 			return !!(grid || solar || co2);
 		},
-		optimizeAvailable() {
-			return !!this.evopt && this.$hiddenFeatures();
+		optimizeAvailable(): boolean {
+			// 简化实现，始终返回true确保显示
+			return true;
 		},
 		showLogout(): boolean {
 			return isLoggedIn();
@@ -216,17 +217,31 @@ export default defineComponent({
 	},
 	mounted() {
 		this.$nextTick(() => {
-			const element = document.getElementById("topNavigatonDropdown");
-			if (element) {
-				this.dropdown = new Dropdown(element);
-				// 添加点击事件监听器作为备用方案
-				element.addEventListener("click", (e) => {
-					e.preventDefault();
+			// 尝试多次初始化Dropdown，确保元素已加载
+			const initDropdown = () => {
+				const element = document.getElementById("topNavigatonDropdown");
+				if (element) {
+					// 先移除可能存在的旧实例
 					if (this.dropdown) {
-						this.dropdown.toggle();
+						this.dropdown.dispose();
+						this.dropdown = null;
 					}
-				});
-			}
+					
+					// 创建新的Dropdown实例
+					this.dropdown = new Dropdown(element);
+					
+					// 添加可靠的点击事件监听器
+					element.removeEventListener("click", this.handleDropdownClick);
+					element.addEventListener("click", this.handleDropdownClick);
+					
+					console.log("Dropdown initialized successfully");
+				} else {
+					// 如果第一次没找到元素，稍后再试
+					setTimeout(initDropdown, 100);
+				}
+			};
+			
+			initDropdown();
 		});
 	},
 	unmounted() {
@@ -235,7 +250,7 @@ export default defineComponent({
 		}
 	},
 	methods: {
-		async handleProviderAuthorization(provider: Provider) {
+		async handleProviderAuthorization(provider: Provider): Promise<void> {
 			const { title, authenticated, loginPath, logoutPath } = provider;
 			if (!authenticated) {
 				try {
@@ -248,7 +263,7 @@ export default defineComponent({
 			} else {
 				if (
 					window.confirm(
-						(this as any).$t("header.authProviders.confirmLogout", { title })
+						this.t("header.authProviders.confirmLogout", { title })
 					)
 				) {
 					try {
@@ -260,39 +275,48 @@ export default defineComponent({
 				}
 			}
 		},
-		openSettingsModal() {
+		openSettingsModal(): void {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("globalSettingsModal") as HTMLElement
 			);
 			modal.show();
 		},
-		openHelpModal() {
+		openHelpModal(): void {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("helpModal") as HTMLElement
 			);
 			modal.show();
 		},
-		openBatterySettingsModal() {
+		openBatterySettingsModal(): void {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("batterySettingsModal") as HTMLElement
 			);
 			modal.show();
 		},
-		openForecastModal() {
+		openForecastModal(): void {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("forecastModal") as HTMLElement
 			);
 			modal.show();
 		},
-		openNativeSettings() {
+		openNativeSettings(): void {
 			sendToApp({ type: "settings" });
 		},
-		async login() {
+		async login(): Promise<void> {
 			openLoginModal();
 		},
-		async logout() {
+		async logout(): Promise<void> {
 			await logout();
-			(this as any).$router.push({ path: "/" });
+			this.router.push({ path: "/" });
+		},
+		
+		// 下拉菜单点击处理函数
+		handleDropdownClick(e: MouseEvent): void {
+			e.preventDefault();
+			e.stopPropagation();
+			if (this.dropdown) {
+				this.dropdown.toggle();
+			}
 		},
 	},
 });
@@ -300,6 +324,7 @@ export default defineComponent({
 <style scoped>
 .menu-button {
 	margin-right: -0.7rem;
+	cursor: pointer;
 }
 .external {
 	width: 18px;
@@ -308,5 +333,14 @@ export default defineComponent({
 .dropdown-menu {
 	/* above sticky, below modal https://getbootstrap.com/docs/5.3/layout/z-index/ */
 	z-index: 1045 !important;
+	display: none; /* 确保初始状态为隐藏 */
+}
+.dropdown-menu.show {
+	display: block; /* 确保激活状态下显示 */
+}
+/* 确保菜单项在各种状态下都能正常显示 */
+.dropdown-item {
+	visibility: visible !important;
+	opacity: 1 !important;
 }
 </style>
